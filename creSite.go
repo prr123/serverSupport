@@ -17,22 +17,41 @@ var dbg bool
 func main() {
 
 	dbg = false
+	site := ""
 	numArgs := len(os.Args)
 
 	switch numArgs {
 		case 1:
 			fmt.Println("no arguments provided!")
-
+			fmt.Println("usage is:")
+			fmt.Printf("./%s site [dbg]\n", os.Args[0])
+			os.Exit(-1)
 		case 2:
-			if os.Args[1] != "dbg" {
-				fmt.Printf("error invalid argument: %s\n", os.Args[1])
+
+			site = os.Args[1]
+			if site == "dbg" {
+				fmt.Println("invalid site: dbg!")
 				os.Exit(-1)
 			}
+			fmt.Printf("** creating folders for site %s ***\n",site)
+
+		case 3:
+			site = os.Args[1]
+			if site == "dbg" {
+				fmt.Println("invalid site: dbg!")
+				os.Exit(-1)
+			}
+			fmt.Printf("** creating folders for site %s ***\n",site)
+			if os.Args[2] != "dbg" {
+				fmt.Printf("error invalid argument: %s\n", os.Args[2])
+				os.Exit(-1)
+			}
+			fmt.Println("dbg enabled!")
 			dbg = true
 		default:
 			fmt.Println("too many args!")
 			fmt.Println("usage is:")
-			fmt.Printf("./%s \n", os.Args[0])
+			fmt.Printf("./%s site [dbg]\n", os.Args[0])
 			os.Exit(-1)
 	}
 
