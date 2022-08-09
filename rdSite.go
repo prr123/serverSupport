@@ -18,7 +18,9 @@ type siteYamlObj struct {
 	Domain string `yaml:"domain"`
 	Desc string `yaml:"description"`
 	Keys []string `yaml:"keywords"`
-
+	Authors []string `yaml:"author"`
+	Date string `yaml:"date"`
+	Icon string `yaml:"icon"`
 }
 
 func dispYamlObj(site *siteYamlObj) {
@@ -27,9 +29,18 @@ func dispYamlObj(site *siteYamlObj) {
 	fmt.Printf("  Description: %s\n", site.Desc)
 	fmt.Printf("  keywords (%d):\n", len(site.Keys))
 	for i:=0; i< len(site.Keys); i++ {
-		fmt.Printf("key %d: %s\n", i, site.Keys[i])
+		fmt.Printf("    key %d: %s\n", i, site.Keys[i])
 	}
-
+	if len(site.Authors) == 1 {
+		fmt.Printf("  author: %s\n", site.Authors[0])
+	} else {
+		fmt.Printf("  authors(%d):\n", len(site.Authors))
+		for i:=0; i< len(site.Authors); i++ {
+			fmt.Printf("    author(%d): %s\n", i, site.Authors[i])
+		}
+	}
+	fmt.Printf("  date: %s\n", site.Date)
+	fmt.Printf("  icon path: %s\n", site.Icon)
 }
 
 func main() {
