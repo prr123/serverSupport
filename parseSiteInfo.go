@@ -12,6 +12,7 @@ import (
 	"os"
 	"fmt"
 	"gopkg.in/yaml.v3"
+	util "util"
 )
 
 type siteYamlObj struct {
@@ -45,6 +46,26 @@ func dispYamlObj(site *siteYamlObj) {
 	fmt.Printf("  icon path: %s\n", site.Icon)
 }
 
+func IsDomain(domain string)(err error) {
+
+	db := []byte(domain)
+	point:= 0
+	for i:=0; i< len(db); i++ {
+		if !util.IsAlphaNumeric(db[i]) {
+			if db[i] == '.' {
+				point++
+			} else {
+				return fmt.Errorf("char (%d): %d not alphaNumeric or period!", i)
+			}
+		}
+	}
+
+	if point == 0 {return fmt.Errorf("no subdomain!")}
+	if point > 1 {return fmt.Errorf("more than one domain!")}
+
+	return nil
+}
+
 func checkYamlObj(site *siteYamlObj) (err error) {
 
 	noErrParse := true
@@ -54,6 +75,9 @@ func checkYamlObj(site *siteYamlObj) (err error) {
 
 	domain := site.Domain
 	if !(len(domain)>0) {return fmt.Errorf("domain is empty!")}
+
+	err = IsDomain(domain)
+	if err != nil {return fmt.Errorf("%v", err)}
 
 	// check whether domain exists
 	domainPath := "/home/peter/www/" + domain
@@ -165,7 +189,7 @@ func main() {
         fmt.Printf("unmarshall error: %v\n", err)
 		os.Exit(-1)
     }
-	fmt.Printf("yaml\n %v\n", yamlObj)
+//	fmt.Printf("yaml\n %v\n", yamlObj)
 
 	dispYamlObj(yamlObj)
 
