@@ -22,6 +22,7 @@ type siteYamlObj struct {
 	Authors []string `yaml:"author"`
 	Date string `yaml:"date"`
 	Icon string `yaml:"icon"`
+	Title string `yaml:"title"`
 	PrimDom string
 	SecDom string
 }
@@ -30,6 +31,7 @@ type siteYamlObj struct {
 
 func dispYamlObj(site *siteYamlObj) {
 	fmt.Println("*** Yaml Obj ***")
+	fmt.Printf("  Title:  %s\n", site.Title)
 	fmt.Printf("  Domain: %s\n    Primary: %s Secondary: %s\n", site.Domain, site.PrimDom, site.SecDom)
 	fmt.Printf("  Description: %s\n", site.Desc)
 	fmt.Printf("  keywords (%d):\n", len(site.Keys))
@@ -80,6 +82,11 @@ func checkYamlObj(site *siteYamlObj) (err error) {
 
 	if site == nil {return fmt.Errorf("siteYamlObj is nil!")}
 
+	// title
+	title := site.Title
+	if !(len(title)>0) {return fmt.Errorf("title is empty!")}
+
+	// domain
 	domain := site.Domain
 	if !(len(domain)>0) {return fmt.Errorf("domain is empty!")}
 
@@ -140,6 +147,72 @@ func checkYamlObj(site *siteYamlObj) (err error) {
 	if !noErrParse {
 		return fmt.Errorf("%s\n", errStr)
 	}
+
+	return nil
+}
+
+func creIndexFil(site *siteYamlObj) (err error) {
+
+	outFilPath := "./output/index.html"
+
+	_, err = os.Stat(outFilPath)
+	if err == nil {
+		return fmt.Errorf("error index.html found!")
+	} else {
+		if os.IsExist(err){return fmt.Errorf("error %v!", err)}
+	}
+
+	fmt.Println("creating index.html!")
+	outfil, err := os.Create(outFilPath)
+	if err != nil {return fmt.Errorf("could not create index.html: %v", err)}
+	defer outfil.Close()
+
+	outstr := "<!DOCTYPE html>\n"
+	outstr += "<html lang=\"en\">\n<head>\n"
+	outstr += "  <meta charset=\"UTF-8\">\n"
+	outstr += "  <meta name=\"description\" content=\""+site.Desc+"\">\n"
+	outstr += "  <meta name=\"keywords\" content=\""
+	keyStr:= ""
+	for i:=0; i< (len(site.Keys) -1); i++ {
+		keyStr += site.Keys[i] + ", "
+	}
+	if len(site.Keys) > 1 {keyStr += site.Keys[(len(site.Keys)-1)]}
+	outstr += keyStr + "\">\n"
+	outstr += "  <meta name=\"author\" content=\""
+	authorStr := ""
+	for i:=0; i< len(site.Authors) -1; i++ {
+		authorStr += site.Authors[i] + ", "
+	}
+	if len(site.Authors) > 1 {authorStr += site.Authors[(len(site.Authors)-1)]}
+	outstr += authorStr + "\">\n"
+	outstr += "  <meta name=\"date\" content=\"" + site.Date + "\">\n"
+	outstr += "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n"
+
+	outfil.WriteString(outstr)
+
+	//link + title
+	outstr = "<title>" + site.Title + "</title>\n"
+	outstr += "<link rel=\"icon\" type=\"image/png\" sizes=\"32x32\" href=\"" + site.Icon + "\">\n"
+	outfil.WriteString(outstr)
+
+	outstr = `<style>
+* {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  list-style: none;
+  text-decoration:none;
+}
+</style>
+</head>
+<body>
+`
+	outfil.WriteString(outstr)
+
+	outstr = `</body>
+</html>
+`
+	outfil.WriteString(outstr)
 
 	return nil
 }
@@ -206,7 +279,7 @@ func main() {
 	}
 	dispYamlObj(yamlObj)
 
-	err = checkYamlObj(yamlObj)
+//	err = checkYamlObj(yamlObj)
 	if err != nil {
 		fmt.Printf("\nerror parsing YamlObj:\n%v\n", err)
 		os.Exit(-1)
@@ -214,7 +287,11 @@ func main() {
 
 
 // create index file
-
+	err = creIndexFil(yamlObj)
+	if err != nil {
+		fmt.Printf("error creating Index File:\n%v\n", err)
+		os.Exit(-1)
+	}
 
 	fmt.Println("*** rdSite  success ***")
 }
