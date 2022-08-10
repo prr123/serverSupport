@@ -22,13 +22,15 @@ type siteYamlObj struct {
 	Authors []string `yaml:"author"`
 	Date string `yaml:"date"`
 	Icon string `yaml:"icon"`
+	PrimDom string
+	SecDom string
 }
 
 
 
 func dispYamlObj(site *siteYamlObj) {
 	fmt.Println("*** Yaml Obj ***")
-	fmt.Printf("  Domain: %s\n", site.Domain)
+	fmt.Printf("  Domain: %s\n    Primary: %s Secondary: %s\n", site.Domain, site.PrimDom, site.SecDom)
 	fmt.Printf("  Description: %s\n", site.Desc)
 	fmt.Printf("  keywords (%d):\n", len(site.Keys))
 	for i:=0; i< len(site.Keys); i++ {
@@ -46,13 +48,15 @@ func dispYamlObj(site *siteYamlObj) {
 	fmt.Printf("  icon path: %s\n", site.Icon)
 }
 
-func IsDomain(domain string)(err error) {
+func checkDomain(site *siteYamlObj)(err error) {
 
-	db := []byte(domain)
+	db := []byte(site.Domain)
 	point:= 0
+	ptpos := 0
 	for i:=0; i< len(db); i++ {
 		if !util.IsAlphaNumeric(db[i]) {
 			if db[i] == '.' {
+				ptpos = i
 				point++
 			} else {
 				return fmt.Errorf("char (%d): %d not alphaNumeric or period!", i)
@@ -62,6 +66,9 @@ func IsDomain(domain string)(err error) {
 
 	if point == 0 {return fmt.Errorf("no subdomain!")}
 	if point > 1 {return fmt.Errorf("more than one domain!")}
+
+	site.SecDom = string(db[:ptpos])
+	site.PrimDom = string(db[(ptpos+1):])
 
 	return nil
 }
@@ -76,7 +83,7 @@ func checkYamlObj(site *siteYamlObj) (err error) {
 	domain := site.Domain
 	if !(len(domain)>0) {return fmt.Errorf("domain is empty!")}
 
-	err = IsDomain(domain)
+	err = checkDomain(site)
 	if err != nil {return fmt.Errorf("%v", err)}
 
 	// check whether domain exists
@@ -133,6 +140,7 @@ func checkYamlObj(site *siteYamlObj) (err error) {
 	if !noErrParse {
 		return fmt.Errorf("%s\n", errStr)
 	}
+
 	return nil
 }
 
@@ -191,6 +199,11 @@ func main() {
     }
 //	fmt.Printf("yaml\n %v\n", yamlObj)
 
+	err = checkDomain(yamlObj)
+	if err != nil {
+        fmt.Printf("checkDomain: %v\n", err)
+		os.Exit(-1)
+	}
 	dispYamlObj(yamlObj)
 
 	err = checkYamlObj(yamlObj)
@@ -198,6 +211,10 @@ func main() {
 		fmt.Printf("\nerror parsing YamlObj:\n%v\n", err)
 		os.Exit(-1)
 	}
+
+
+// create index file
+
 
 	fmt.Println("*** rdSite  success ***")
 }
