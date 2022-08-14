@@ -10,6 +10,7 @@ package main
 import (
     "os"
     "fmt"
+	"bytes"
 )
 
 var dbg bool
@@ -21,6 +22,35 @@ func errmsg(msg string, err error) {
         fmt.Printf("%s\n", msg)
     }
     os.Exit(-1)
+}
+
+func findLinks(inbuf []byte)(links []string) {
+
+	stylEnd := bytes.Index(inbuf, []byte("</style>"))
+
+	fmt.Printf("stylEnd: %d\n", stylEnd)
+
+	stPos := stylEnd+8
+	linkNum := -1
+	for i:=0; i<10; i++ {
+		comPos := bytes.Index(inbuf[stPos:], []byte("<!--")) +stPos
+		if comPos == stPos -1 {
+			break
+		}
+		include := bytes.Index(inbuf[comPos:], []byte("include"))
+		if include == -1 { continue}
+		comEndPos := bytes.Index(inbuf[comPos:], []byte("-->"))
+		if comEndPos == -1 {continue}
+		comEndPos = comPos + comEndPos
+		linkNum++
+//		fmt.Printf("link: %d stPos: %d %s %s\n", linkNum, comPos, string(inbuf[(comPos + include + 7):comEndPos]),string(inbuf[comPos: comEndPos]))
+		links = append(links, string(inbuf[(comPos + include + 7):comEndPos]))
+
+		stPos = comPos + 5
+	}
+
+
+	return links
 }
 
 func main() {
@@ -97,7 +127,7 @@ func main() {
 
 	size := int(fileInfo.Size())
 
-	fmt.Println("size: ", size)
+//	fmt.Println("size: ", size)
 
 	inbuf := make([]byte, size)
 
@@ -112,6 +142,13 @@ func main() {
 	if err != nil {
 		fmt.Printf("error readin infil: %v\n", err)
 		os.Exit(-1)
+	}
+
+	links := findLinks(inbuf)
+
+	fmt.Printf("links: %d\n",len(links))
+	for i:=0; i< len(links); i++ {
+		fmt.Printf("link(%d): %s\n", i, links[i])
 	}
 
 	fmt.Println("*** success combine Html ***")
