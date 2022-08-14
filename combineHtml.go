@@ -99,5 +99,20 @@ func main() {
 
 	fmt.Println("size: ", size)
 
+	inbuf := make([]byte, size)
+
+	infil, err := os.Open(sitePath)
+	if err != nil {
+		fmt.Printf("error opening %s: %v\n", sitePath, err)
+		os.Exit(-1)
+	}
+	defer infil.Close()
+
+	_, err = infil.Read(inbuf)
+	if err != nil {
+		fmt.Printf("error readin infil: %v\n", err)
+		os.Exit(-1)
+	}
+
 	fmt.Println("*** success combine Html ***")
 }
