@@ -100,7 +100,7 @@ func insertLink(inbuf []byte, linkFilNam string)(outstr string, err error) {
 		istate :=0
 		genStylEnd := 0
 		for i:=stylPos; i< len(linkbuf); i++ {
-			fmt.Printf("pos: %d char: %q istate: %d\n", i, linkbuf[i], istate)
+//		fmt.Printf("pos: %d char: %q istate: %d\n", i, linkbuf[i], istate)
 			found := false
 			switch istate {
 				case 0:
@@ -125,7 +125,7 @@ func insertLink(inbuf []byte, linkFilNam string)(outstr string, err error) {
 	linkEnd := stylPos + stylEndPos
 
 	stylStr := string(linkbuf[linkSt:linkEnd])
-	fmt.Printf("stylstr:\n%s\n", stylStr)
+//	fmt.Printf("stylstr:\n%s\n", stylStr)
 
 	outstr += stylStr
 	if stylEnd == -1 {
@@ -135,19 +135,22 @@ func insertLink(inbuf []byte, linkFilNam string)(outstr string, err error) {
 	// find insert pos for html
 	comPos := bytes.Index(inbuf[stylEnd:], []byte(linkFilNam))
 	if comPos == -1 { return "", fmt.Errorf("link file name not found!")}
-	comEndPos := bytes.Index(inbuf[stylEnd:], []byte("-->"))
+	comPos += stylEnd
+	comEndPos := bytes.Index(inbuf[comPos:], []byte("-->"))
 	if comEndPos == -1 {return "", fmt.Errorf("link file end of comment not found!")}
-	insPos := comEndPos + stylEnd + 4
+	comEndPos += comPos
+	insPos := comEndPos + 4
 
 	outstr += string(inbuf[stylEnd:insPos])
+//fmt.Println
 
 	// find html code in link file
-	linkHtmlStPos := bytes.Index(linkbuf[linkEnd:], []byte("<body>"))
-	if linkHtmlStPos == -1 { return "", fmt.Errorf("link file body tag not found!")}
+	linkHtmlStPos := bytes.Index(linkbuf[linkEnd:], []byte("<section"))
+	if linkHtmlStPos == -1 { return "", fmt.Errorf("link file section tag not found!")}
 	linkHtmlStPos += linkEnd
-	linkHtmlEndPos := bytes.Index(linkbuf[linkHtmlStPos:], []byte("</body>"))
-	if linkHtmlEndPos == -1 { return "", fmt.Errorf("link file /body tag not found!")}
-	linkHtmlEndPos += linkHtmlStPos
+	linkHtmlEndPos := bytes.Index(linkbuf[linkHtmlStPos:], []byte("</section>"))
+	if linkHtmlEndPos == -1 { return "", fmt.Errorf("link file /section tag not found!")}
+	linkHtmlEndPos += linkHtmlStPos + 11
 
 	outstr += string(linkbuf[linkHtmlStPos:linkHtmlEndPos])
 
