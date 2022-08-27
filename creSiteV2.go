@@ -19,7 +19,7 @@ package main
 import (
 	"os"
 	"fmt"
-	site "mkSite/siteLib"
+	siteLib "mkSite/siteLib"
 )
 
 var dbg bool
@@ -89,7 +89,7 @@ func main() {
 		os.Exit(-1)
 	}
 
-	err = site.CreSite(site)
+	err := siteLib.CreSite(site)
 	if err != nil {
 		fmt.Printf("error CreSite: %v!", err)
 		os.Exit(-1)
