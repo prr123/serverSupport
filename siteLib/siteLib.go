@@ -20,6 +20,7 @@ package siteLib
 import (
 	"os"
 	"fmt"
+	"bufio"
 )
 
 func creSite(site string) (err error) {
@@ -29,7 +30,7 @@ func creSite(site string) (err error) {
 
     fileInfo, err := os.Stat(baseDir)
     if os.IsNotExist(err) {
-        return fmt.Errorf("error: folder %s does not exist!", baseDir)
+        return fmt.Errorf("error: base directory (%s) does not exist!", baseDir)
     }
     if err != nil {	return err}
 
@@ -59,6 +60,46 @@ func creSite(site string) (err error) {
 
     err = os.Mkdir(siteDir + "/css", os.ModePerm)
     if err != nil {return fmt.Errorf("error creating css subfolder: %v", err)}
+
+	return nil
+}
+
+func delSite(site string) (err error) {
+
+    baseDir := "/home/peter/www"
+    _, err = os.Stat(baseDir)
+    if os.IsNotExist(err) {
+        return fmt.Errorf("error: base directory (%s) does not exist!", baseDir)
+    }
+    if err != nil {	return err}
+
+    // now we need to check whether folder already exists
+    siteDir := baseDir + "/" + site
+    _, err = os.Stat(baseDir)
+    if os.IsExist(err) {
+        fmt.Printf("error: folder %s does exist!\n", siteDir)
+        os.Exit(-1)
+    }
+
+    // make sure
+    fmt.Printf("Deleting folders and files for site \"%s\"! Are you sure? (Y/n): ", site)
+    reader := bufio.NewReader(os.Stdin)
+    // ReadString will block until the delimiter is entered
+    inp, err := reader.ReadString('\n')
+    if err != nil {
+        return fmt.Errorf("An error occured while reading input. Please try again: %v", err)
+    }
+    fmt.Printf("inp: %q\n", inp[0])
+    if inp[0] != 'Y' {return fmt.Errorf("no correct confirmation!")}
+
+    err = os.RemoveAll(siteDir)
+    if err != nil {return fmt.Errorf("error deleting folder: %v", err)}
+
+	return nil
+}
+
+func creIndexFile(site string) (err error) {
+
 
 	return nil
 }
