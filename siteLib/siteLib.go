@@ -21,9 +21,38 @@ import (
 	"os"
 	"fmt"
 	"bufio"
+    "encoding/base64"
+    "io/ioutil"
+    "net/http"
 )
 
-func creSite(site string) (err error) {
+type idxOption struct {
+	Favicon string
+	Site string
+	IdxFilNam string
+}
+
+func ToBase64(b []byte) string {
+    return base64.StdEncoding.EncodeToString(b)
+}
+
+func GetExt (filNam string) (ext string) {
+// function returns extension of a file name
+
+	flen := len(filNam)
+	extPos := -1
+	for i:= flen-1; i>-1; i-- {
+		if filNam[i] == '.' {
+			extPos = i
+			break
+		}
+	}
+	if extPos == -1 {return ""}
+
+	return string(filNam[extPos+1:]) 
+}
+
+func CreSite(site string) (err error) {
 
     // check whether baseline folder exists
     baseDir := "/home/peter/www"
@@ -64,7 +93,8 @@ func creSite(site string) (err error) {
 	return nil
 }
 
-func delSite(site string) (err error) {
+func DelSite(site string) (err error) {
+// function deletes folders of the domain 'site'
 
     baseDir := "/home/peter/www"
     _, err = os.Stat(baseDir)
@@ -77,7 +107,7 @@ func delSite(site string) (err error) {
     siteDir := baseDir + "/" + site
     _, err = os.Stat(baseDir)
     if os.IsExist(err) {
-        fmt.Printf("error: folder %s does exist!\n", siteDir)
+        fmt.Errorf("error: folder %s does exist!\n", siteDir)
         os.Exit(-1)
     }
 
@@ -98,8 +128,173 @@ func delSite(site string) (err error) {
 	return nil
 }
 
-func creIndexFile(site string) (err error) {
+func CreIndexFile(opt idxOption) (err error) {
+// function creates an html index file
+// opt file specifies: site, index file name, and favicon file
 
+    wwwRoot := "/home/peter/www/"
+
+    // check whether domain exists
+    domainPath := wwwRoot + opt.Site
+
+    _, err = os.Stat(domainPath)
+    if err != nil {
+        return fmt.Errorf("error - no domain \"%s\": %v", opt.Site, err)
+    }
+
+	idxFilNam:=""
+    // check index file
+    if len(opt.IdxFilNam) > 0 {
+        idxFilNam = domainPath + "/html/" + opt.IdxFilNam + ".html"
+    } else {
+        idxFilNam = domainPath + "/html/index.html"
+    }
+    _, err = os.Stat(idxFilNam)
+    if err == nil {
+        return fmt.Errorf("error - index file exists: %s", idxFilNam)
+    }
+
+    fmt.Printf("*** creating index file for domain \"%s\" ***\n", opt.Site)
+    idxFil, err := os.Create(idxFilNam)
+    defer idxFil.Close()
+    if err != nil {
+        return fmt.Errorf("error creating idxFilNam! %v", err)
+    }
+
+	// test whether favicon file exists
+	faviconPath := domainPath + "/image/" + opt.Favicon
+
+//	faviconPath := "/home/peter/www/azul/image/azul32.png"
+
+	favInfo, err := os.Stat(faviconPath)
+    if os.IsNotExist(err) {
+        return fmt.Errorf("error - favicon file does not exist: %s", faviconPath)
+	}
+	if err != nil {
+        return fmt.Errorf("error - favicon file: %v", err)
+	}
+
+	ext := GetExt(faviconPath)
+	imgTyp := false
+	b64Typ := false
+	switch ext {
+		case "b64":
+			b64Typ = true
+		case "png", "jpg", "jpeg":
+			imgTyp = true
+		default:
+			fmt.Printf("error -- extension %s not acceptable!\n", ext)
+	}
+
+	favStr :=""
+	if b64Typ {
+		favFil, err := os.Open(faviconPath)
+		if err != nil { return fmt.Errorf("error opening faviconPath: %v", err)}
+		defer favFil.Close()
+		favBuf := make([]byte, favInfo.Size())
+		_, err = favFil.Read(favBuf)
+		if err != nil { return fmt.Errorf("error reading favicon: %v", err)}
+
+		favStr = `<link rel="icon" type="image/png" href="data:image/png;base64,`
+		favStr += string(favBuf[:]) + "\">\n"
+	}
+	if imgTyp {
+		favStr = `<link rel="icon" type="image/` + ext
+		favStr += `" sizes="32x32" href="`
+		favStr += faviconPath + "\">\n"
+	}
+	if !(imgTyp || b64Typ) {
+		fmt.Println("*** no favicon! ***")
+	}
+
+    outstr := `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="description" content="blog about software writing and using">
+  <meta name="keywords" content="Go">
+  <meta name="author" content="prr">
+  <meta name="date" content="1\3\2021">
+  <meta  name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Azul Software</title>`
+
+	if b64Typ || imgTyp {outstr += favStr}
+
+outstr += `<style>
+* {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  list-style: none;
+  text-decoration:none;
+}
+</style>
+</head>
+<body>
+ <div style="border 1px solid blue">
+  <h1>Hello from Server</h1>
+ </div>
+</body>
+</html>
+`
+
+    _, err = idxFil.WriteString(outstr)
+    if err != nil {
+        return fmt.Errorf("error writing: %v", err)
+    }
+
+	return nil
+}
+
+func EncodeB64 (filNam string) (err error) {
+
+    var base64Encoding string
+
+    inpFilNam := "./" + filNam
+
+	// replace with read
+    bytes, err := ioutil.ReadFile(inpFilNam)
+    if err != nil {
+        return fmt.Errorf("error no favicon file: %v", err)
+    }
+
+   // Determine the content type of the image file
+    mimeType := http.DetectContentType(bytes)
+
+    // Prepend the appropriate URI scheme header depending
+    // on the MIME type
+	ext :=""
+    switch mimeType {
+    case "image/jpeg":
+        base64Encoding += "data:image/jpeg;base64,"
+		ext = "jpg64"
+    case "image/png":
+        base64Encoding += "data:image/png;base64,"
+		ext = "png64"
+	default:
+		return fmt.Errorf("not a valid mimetype: %s!", mimeType)
+    }
+
+    // Append the base64 encoded output
+    base64Encoding += ToBase64(bytes)
+
+    // Print the full base64 representation of the image
+    extPs:=-1
+    for i:=len(filNam) -1; i>-1;i-- {
+        if filNam[i] == '.' {
+            extPs = i
+            break
+        }
+    }
+    if extPs == -1 {extPs = len(filNam)}
+    outFilNam := "./" + string(filNam[:extPs]) + ext
+    outfil, err := os.Create(outFilNam)
+    defer outfil.Close()
+    if err != nil {
+        return fmt.Errorf("error creating output file %s: %v\n", outFilNam, err)
+    }
+
+    outfil.WriteString(base64Encoding)
 
 	return nil
 }
