@@ -1,7 +1,7 @@
 // creSite.go
 // program that creates the directory structure for a domain
 //
-// author: prr, azul softwarw
+// author: prr, azul software
 // date: 6 August 2022
 // copyright 2022 prr, azul software
 //
