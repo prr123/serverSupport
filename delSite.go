@@ -1,5 +1,5 @@
-// creSite.go
-// program that creates the directory structure for a domain
+// delSite.go
+// program that deletes the directory structure for a domain
 //
 // author: prr, azul softwarw
 // date: 6 August 2022
