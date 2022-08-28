@@ -34,7 +34,7 @@ func main() {
 		case 1:
 			fmt.Println("no arguments provided!")
 			fmt.Println("usage is:")
-			fmt.Printf("./%s site [dbg]\n", os.Args[0])
+			fmt.Printf("%s site [dbg]\n", os.Args[0])
 			os.Exit(-1)
 		case 2:
 			site = os.Args[1]
@@ -56,7 +56,7 @@ func main() {
 		default:
 			fmt.Println("too many args!")
 			fmt.Println("usage is:")
-			fmt.Printf("./%s site [dbg]\n", os.Args[0])
+			fmt.Printf("%s site [dbg]\n", os.Args[0])
 			os.Exit(-1)
 	}
 
