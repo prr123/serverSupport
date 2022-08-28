@@ -178,7 +178,7 @@ func CreIndexFile(opt idxOption) (err error) {
 	imgTyp := false
 	b64Typ := false
 	switch ext {
-		case "b64":
+		case "png64", "jpg64":
 			b64Typ = true
 		case "png", "jpg", "jpeg":
 			imgTyp = true
@@ -194,8 +194,12 @@ func CreIndexFile(opt idxOption) (err error) {
 		favBuf := make([]byte, favInfo.Size())
 		_, err = favFil.Read(favBuf)
 		if err != nil { return fmt.Errorf("error reading favicon: %v", err)}
-
-		favStr = `<link rel="icon" type="image/png" href="data:image/png;base64,`
+		if ext == "png64" {
+			favStr = `<link rel="icon" type="image/png" href="data:image/png;base64,`
+		}
+		if ext == "jpg64" {
+			favStr = `<link rel="icon" type="image/jpeg" href="data:image/png;base64,`
+		}
 		favStr += string(favBuf[:]) + "\">\n"
 	}
 	if imgTyp {
