@@ -26,7 +26,7 @@ import (
     "net/http"
 )
 
-type idxOption struct {
+type IdxOpt struct {
 	Favicon string
 	Site string
 	IdxFilNam string
@@ -128,7 +128,7 @@ func DelSite(site string) (err error) {
 	return nil
 }
 
-func CreIndexFile(opt idxOption) (err error) {
+func CreIndexFile(opt IdxOpt) (err error) {
 // function creates an html index file
 // opt file specifies: site, index file name, and favicon file
 
@@ -232,12 +232,19 @@ outstr += `<style>
   list-style: none;
   text-decoration:none;
 }
+
+#main {
+	border: 1px solid blue;
+	min-height: 300px
+}
 </style>
 </head>
 <body>
- <div style="border 1px solid blue">
+ <div id="main">
   <h1>Hello from Server</h1>
  </div>
+ <script>
+ </script>
 </body>
 </html>
 `
